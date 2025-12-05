@@ -1,0 +1,231 @@
+<!-- Main container for Railway Logs LiveView -->
+<div class="container mx-auto p-4 max-w-7xl">
+  <!-- Header with controls -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">
+        Railway Logs
+      </h1>
+      <p class="text-gray-600">
+        Service: <span class="font-semibold">{@service_id}</span> |
+        Project: <span class="font-semibold">{@project_id}</span>
+      </p>
+    </div>
+    
+<!-- Connection status -->
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2">
+        <span class="text-2xl">{get_connection_status_icon(@connection_status)}</span>
+        <span class="text-sm font-medium capitalize">{@connection_status}</span>
+      </div>
+
+      <div class="text-sm text-gray-600">
+        Subscriptions: <span class="font-semibold">{@subscription_count}</span>
+      </div>
+      
+<!-- Action buttons -->
+      <div class="flex space-x-2">
+        <button
+          phx-click="start_monitoring"
+          class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+        >
+          Start
+        </button>
+        <button
+          phx-click="stop_monitoring"
+          class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+        >
+          Stop
+        </button>
+        <button
+          phx-click="reconnect_service"
+          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+        >
+          Reconnect
+        </button>
+      </div>
+    </div>
+  </div>
+  
+<!-- Metrics bar -->
+  <div class="bg-gray-100 rounded-lg p-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+      <div>
+        <span class="text-gray-600">Total Logs:</span>
+        <span class="font-semibold ml-1">{@metrics.total_logs}</span>
+      </div>
+      <div>
+        <span class="text-gray-600">Errors:</span>
+        <span class="font-semibold text-red-600 ml-1">{@metrics.error_count}</span>
+      </div>
+      <div>
+        <span class="text-gray-600">Warnings:</span>
+        <span class="font-semibold text-yellow-600 ml-1">{@metrics.warning_count}</span>
+      </div>
+      <div>
+        <span class="text-gray-600">Logs/min:</span>
+        <span class="font-semibold ml-1">{@metrics.logs_per_minute}</span>
+      </div>
+      <div>
+        <span class="text-gray-600">Last Log:</span>
+        <span class="font-semibold ml-1">
+          {if @metrics.last_log_time, do: format_timestamp(@metrics.last_log_time), else: "Never"}
+        </span>
+      </div>
+    </div>
+  </div>
+  
+<!-- Filters and controls -->
+  <div class="bg-white rounded-lg shadow-sm border p-4 mb-6">
+    <div class="flex flex-wrap gap-4 items-center">
+      <!-- Log level filter -->
+      <div class="flex items-center space-x-2">
+        <label for="log_level" class="text-sm font-medium">Level:</label>
+        <form phx-change="filter_by_level" class="inline">
+          <select
+            name="level"
+            id="log_level"
+            class="border rounded px-2 py-1 text-sm"
+          >
+            <option value="all" selected={@log_level_filter == "all"}>All</option>
+            <option value="debug" selected={@log_level_filter == "debug"}>Debug</option>
+            <option value="info" selected={@log_level_filter == "info"}>Info</option>
+            <option value="warn" selected={@log_level_filter == "warn"}>Warn</option>
+            <option value="error" selected={@log_level_filter == "error"}>Error</option>
+            <option value="fatal" selected={@log_level_filter == "fatal"}>Fatal</option>
+          </select>
+        </form>
+      </div>
+      
+<!-- Search -->
+      <div class="flex items-center space-x-2">
+        <label for="search" class="text-sm font-medium">Search:</label>
+        <form phx-submit="search_logs" class="flex">
+          <input
+            type="text"
+            name="query"
+            id="search"
+            value={@search_query}
+            placeholder="Search logs..."
+            class="border rounded-l px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="bg-blue-500 text-white rounded-r px-3 py-1 text-sm hover:bg-blue-600"
+          >
+            Search
+          </button>
+        </form>
+      </div>
+      
+<!-- Toggle controls -->
+      <div class="flex items-center space-x-4">
+        <button
+          phx-click="toggle_auto_scroll"
+          class={"px-3 py-1 text-sm rounded " <> if(@auto_scroll, do: "bg-blue-500 text-white", else: "bg-gray-200 text-gray-700")}
+        >
+          Auto-scroll: {if @auto_scroll, do: "ON", else: "OFF"}
+        </button>
+
+        <button
+          phx-click="toggle_incidents"
+          class={"px-3 py-1 text-sm rounded " <> if(@show_incidents, do: "bg-red-500 text-white", else: "bg-gray-200 text-gray-700")}
+        >
+          Incidents: {length(@incidents)}
+        </button>
+
+        <button
+          phx-click="clear_logs"
+          class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+  
+<!-- Incidents panel (collapsible) -->
+  <%= if @show_incidents and length(@incidents) > 0 do %>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <h3 class="font-semibold text-red-800 mb-3">Recent Incidents</h3>
+      <div class="space-y-2">
+        <%= for incident <- @incidents do %>
+          <div class="bg-white p-3 rounded border border-red-200">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-red-800">
+                  {incident.severity |> Atom.to_string() |> String.upcase()}
+                </p>
+                <p class="text-sm text-gray-700">{incident.description}</p>
+                <p class="text-xs text-gray-500 mt-1">
+                  {format_timestamp(incident.triggered_at)}
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  
+<!-- Logs display -->
+  <div
+    class="bg-gray-900 rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm"
+    id="logs-container"
+  >
+    <%= if length(@filtered_logs) == 0 do %>
+      <div class="text-gray-500 text-center py-8">
+        No logs to display. {if @connection_status == :disconnected,
+          do: "Connect to start receiving logs."}
+      </div>
+    <% else %>
+      <div class="space-y-1">
+        <%= for log <- @filtered_logs do %>
+          <div class="flex items-start space-x-2 group hover:bg-gray-800 px-2 py-1 rounded">
+            <!-- Timestamp -->
+            <span class="text-gray-400 flex-shrink-0">
+              {format_timestamp(log.timestamp)}
+            </span>
+            
+<!-- Log level -->
+            <span class={"font-semibold flex-shrink-0 " <> get_log_level_color(log.level)}>
+              {String.upcase(log.level)}
+            </span>
+            
+<!-- Service name (if available) -->
+            <%= if log.service_name do %>
+              <span class="text-gray-500 flex-shrink-0">
+                [{log.service_name}]
+              </span>
+            <% end %>
+            
+<!-- Log message -->
+            <span class="text-gray-300 flex-1 break-all">
+              {log.message}
+            </span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  
+<!-- Loading indicator -->
+  <%= if @loading do %>
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+        <span>Loading logs...</span>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Hook for auto-scrolling -->
+<script>
+  window.addEventListener("phx:scroll_to_bottom", () => {
+    const logsContainer = document.getElementById("logs-container");
+    if (logsContainer) {
+      logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+  });
+</script>

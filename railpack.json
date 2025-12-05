@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "name": "Tessera AI",
+  "type": "elixir",
+  "build": {
+    "commands": [
+      "npm install",
+      "npm run build",
+      "mix deps.get --only prod",
+      "mix assets.deploy",
+      "mix release"
+    ]
+  },
+  "deploy": {
+    "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate' && /app/_build/prod/rel/railway_app/bin/railway_app start",
+    "healthcheckPath": "/health",
+    "environmentVariables": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8"
+    }
+  }
+}

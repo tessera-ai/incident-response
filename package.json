@@ -1,0 +1,20 @@
+{
+  "name": "Tessera AI",
+  "version": "0.1.0",
+  "description": "Tessera AI - Railway Template",
+  "scripts": {
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild ./assets/js/app.js --bundle --target=es2022 --outfile=./priv/static/assets/js/app.js --sourcemap",
+    "build:css": "tailwindcss --input=assets/css/app.css --output=priv/static/assets/css/app.css --minify",
+    "watch:js": "esbuild ./assets/js/app.js --bundle --target=es2022 --outfile=./priv/static/assets/js/app.js --sourcemap --watch",
+    "watch:css": "tailwindcss --input=assets/css/app.css --output=priv/static/assets/css/app.css --watch",
+    "dev": "concurrently \"npm run watch:js\" \"npm run watch:css\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.25.4"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.1.7"
+  }
+}

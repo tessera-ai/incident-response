@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  MIX_ENV: test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: railway_app_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.19.2"
+          otp-version: "28"
+
+      - name: Cache Mix dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - name: Install dependencies
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get --only test
+
+      - name: Compile application
+        run: mix compile
+
+      - name: Check code formatting
+        run: mix format --check-formatted
+
+      - name: Run tests
+        run: mix test --max-failures=10
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: railway_app_test
