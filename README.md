@@ -1,100 +1,91 @@
-# Railway Agent
+# Railway Template: Incident Response & Log Analysis
 
-An intelligent DevOps assistant that monitors Railway-hosted services, detects production incidents, and automates remediation actions with Slack integration.
+🚨 **Deploy this template to get an intelligent incident response system that monitors your Railway services and provides AI-powered alerts via Slack.**
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/your-org/incident-response-template)
 
 ## Features
 
-- **🔍 Incident Detection**: Automatically detects incidents from Railway log streams using pattern matching and LLM analysis
-- **🚨 Smart Alerting**: Sends contextual incident alerts to Slack with severity, root cause analysis, and recommended actions
-- **🤖 Auto-Remediation**: Executes safe recovery actions (restart, scale, rollback) with configurable confidence thresholds
-- **💬 Conversational Interface**: Natural language commands via Slack for diagnostics and manual remediation
-- **📊 Dashboard**: Real-time LiveView dashboard showing incidents, remediation actions, and service configurations
-- **🔒 Audit Trail**: Complete history of all incidents, actions, and conversations for compliance and post-mortems
+- **🔍 Real-time Log Streaming**: Monitors Railway services for log events and anomalies
+- **🤖 AI-Powered Analysis**: Uses OpenAI to analyze incidents and provide intelligent remediation suggestions
+- **🚨 Slack Integration**: Sends smart notifications to your Slack workspace with severity assessment and action recommendations
+- **📊 Service Monitoring**: Tracks Railway service health, performance, and deployment events
+- **🎯 Incident Triage**: Automatic categorization and prioritization of incidents based on impact
+- **🔒 Audit Trail**: Complete history of incidents, actions, and conversations for compliance
 
 ## Quick Start
 
-### 1. Deploy the Template
+### 1. Deploy This Template
 
-Click the "Deploy on Railway" button to deploy this template to your Railway account.
+Click the "Deploy on Railway" button above to deploy this template to your Railway account.
 
-### 2. Configure Environment Variables
+### 2. Configure Required Environment Variables
 
-After deployment, go to your service's **Variables** tab in Railway and configure the following:
+Go to your service's **Variables** tab in Railway and add these **required** variables:
 
-#### Required Variables
-
-| Variable            | Description                                | How to Get It                                                           |
-| ------------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
-| `DATABASE_URL`      | PostgreSQL connection string               | Auto-configured if you added the Postgres plugin                        |
-| `SECRET_KEY_BASE`   | Phoenix secret key                         | Generate with `mix phx.gen.secret` or use a 64+ character random string |
-| `RAILWAY_API_TOKEN` | Railway API token for log streaming        | [Get from Railway](#getting-your-railway-api-token)                     |
-| `OPENAI_API_KEY`    | OpenAI API key (required for LLM analysis) | [Get from OpenAI](#getting-your-openai-api-key)                         |
-
-#### Slack Integration (Required for Alerts)
-
-| Variable               | Description                           | How to Get It                                     |
-| ---------------------- | ------------------------------------- | ------------------------------------------------- |
-| `SLACK_BOT_TOKEN`      | Slack bot token (starts with `xoxb-`) | [Setup Slack App](#setting-up-slack)              |
-| `SLACK_SIGNING_SECRET` | Slack app signing secret              | [Setup Slack App](#setting-up-slack)              |
-| `SLACK_CHANNEL_ID`     | Channel ID for incident alerts        | [Find Channel ID](#finding-your-slack-channel-id) |
-
-#### External Service Monitoring
-
-| Variable                         | Description                                         | How to Get It                                         |
-| -------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
-| `RAILWAY_MONITORED_PROJECTS`     | Comma-separated Railway project IDs to monitor      | [Find Project IDs](#finding-your-railway-project-ids) |
-| `RAILWAY_MONITORED_ENVIRONMENTS` | (Optional) Comma-separated environments per project | Defaults to `production`                              |
-
-#### Optional Variables
-
-| Variable               | Default  | Description                            |
-| ---------------------- | -------- | -------------------------------------- |
-| `LLM_DEFAULT_PROVIDER` | `openai` | LLM provider (`openai` or `anthropic`) |
-| `ANTHROPIC_API_KEY`    | -        | Anthropic API key (if using Claude)    |
-| `POOL_SIZE`            | `10`     | Database connection pool size          |
-
----
-
-## Getting Your API Keys & Tokens
-
-### Getting Your Railway API Token
-
-1. Go to [Railway Dashboard](https://railway.app/account/tokens)
-2. Click **"Create Token"**
-3. Give it a name (e.g., "Railway Agent")
-4. Copy the token and save it as `RAILWAY_API_TOKEN`
-
-> **Note**: The token needs read access to the projects you want to monitor.
-
-### Finding Your Railway Project IDs
-
-1. Go to [Railway Dashboard](https://railway.app)
-2. Select the project you want to monitor
-3. Go to **Settings** → Copy the **Project ID**
-4. Add it to `RAILWAY_MONITORED_PROJECTS`
-
-**Example configurations:**
+#### 🚀 Must-Have Variables
 
 ```bash
-# Monitor a single project
-RAILWAY_MONITORED_PROJECTS=proj_abc123
+# Railway Integration - Get from: Railway Dashboard → Account → API Tokens
+RAILWAY_API_TOKEN=your_railway_api_token_here
 
-# Monitor multiple projects
-RAILWAY_MONITORED_PROJECTS=proj_abc123,proj_def456,proj_ghi789
+# LLM Provider - Get from: https://platform.openai.com/api-keys
+OPENAI_API_KEY=your_openai_api_key_here
 
-# With specific environments (optional)
-RAILWAY_MONITORED_ENVIRONMENTS=production,staging,production
+# Slack Integration - Get from: https://api.slack.com/apps
+SLACK_BOT_TOKEN=xoxb-your_slack_bot_token_here
+SLACK_SIGNING_SECRET=your_slack_signing_secret_here
+SLACK_CHANNEL_ID=C0123456789
 ```
 
-### Getting Your OpenAI API Key
+#### 📊 Optional - Monitoring Targets
 
-1. Go to [OpenAI API Keys](https://platform.openai.com/api-keys)
+```bash
+# Monitor specific Railway projects (comma-separated)
+RAILWAY_MONITORED_PROJECTS=proj_abc123,proj_def456
+
+# Monitor specific environments (comma-separated)
+RAILWAY_MONITORED_ENVIRONMENTS=production,staging
+```
+
+> **💡 Need help getting these values?** See the detailed setup guides below.
+
+## 📋 Setup Guides
+
+### 🔗 Getting Your Railway API Token
+
+1. Go to [Railway Dashboard → API Tokens](https://railway.app/account/tokens)
+2. Click **"Create New Token"**
+3. Give it a name (e.g., "Incident Response System")
+4. Copy the token - it starts with `prod_...`
+5. Add it as `RAILWAY_API_TOKEN` in your Railway variables
+
+> **Required permissions**: Read access to projects you want to monitor
+
+### 🎯 Finding Your Railway Project IDs
+
+1. Go to [Railway Dashboard](https://railway.app)
+2. Select any project you want to monitor
+3. Click **Settings** → copy the **Project ID**
+4. Add it to `RAILWAY_MONITORED_PROJECTS` (comma-separated for multiple)
+
+**Example:**
+```bash
+RAILWAY_MONITORED_PROJECTS=80661543-f4f8-473e-ae39-0e49270938de,another-project-id
+```
+
+### 🤖 Getting Your OpenAI API Key
+
+1. Go to [OpenAI Platform → API Keys](https://platform.openai.com/api-keys)
 2. Click **"Create new secret key"**
-3. Copy the key (starts with `sk-`) and save it as `OPENAI_API_KEY`
+3. Copy the key (starts with `sk-proj-`)
+4. Add it as `OPENAI_API_KEY` in Railway variables
+
+> **Required**: The application will NOT start without this key
 
 ---
 
-## Setting Up Slack
+## 💬 Setting Up Slack Integration
 
 ### Step 1: Create a Slack App
 

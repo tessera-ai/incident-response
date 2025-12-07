@@ -1,6 +1,9 @@
 {
   "version": "1.0",
-  "name": "Tessera AI",
+  "name": "Tessera AI Incident Response Agent",
+  "description": "AI-powered incident response system that monitors Railway services and provides intelligent Slack notifications with remediation suggestions",
+  "icon": "🚨",
+  "tags": ["monitoring", "incident-response", "slack", "ai", "logs", "alerts"],
   "type": "elixir",
   "build": {
     "commands": [
@@ -9,14 +12,49 @@
       "mix deps.get --only prod",
       "mix assets.deploy",
       "mix release"
+    ],
+    "watchPatterns": [
+      "lib/**",
+      "config/**",
+      "priv/**",
+      "assets/**",
+      "mix.exs",
+      "mix.lock"
     ]
   },
   "deploy": {
     "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate' && /app/_build/prod/rel/railway_app/bin/railway_app start",
     "healthcheckPath": "/health",
+    "healthcheckTimeout": 300,
+    "port": 4000,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
     "environmentVariables": {
       "LANG": "C.UTF-8",
-      "LC_ALL": "C.UTF-8"
+      "LC_ALL": "C.UTF-8",
+      "RAILWAY_API_TOKEN": "${RAILWAY_API_TOKEN}",
+      "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+      "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+      "SLACK_SIGNING_SECRET": "${SLACK_SIGNING_SECRET}",
+      "SLACK_CHANNEL_ID": "${SLACK_CHANNEL_ID}",
+      "RAILWAY_MONITORED_PROJECTS": "${RAILWAY_MONITORED_PROJECTS:}",
+      "RAILWAY_MONITORED_ENVIRONMENTS": "${RAILWAY_MONITORED_ENVIRONMENTS:}",
+      "RAILWAY_MONITORED_SERVICES": "${RAILWAY_MONITORED_SERVICES:}",
+      "ANTHROPIC_API_KEY": "${ANTHROPIC_API_KEY:}",
+      "LLM_DEFAULT_PROVIDER": "${LLM_DEFAULT_PROVIDER:openai}",
+      "RAILWAY_POLLING_INTERVAL": "${RAILWAY_POLLING_INTERVAL:30000}",
+      "RAILWAY_RATE_LIMIT_HR": "${RAILWAY_RATE_LIMIT_HR:10000}",
+      "RAILWAY_RATE_LIMIT_SEC": "${RAILWAY_RATE_LIMIT_SEC:50}",
+      "RAILWAY_MEMORY_LIMIT": "${RAILWAY_MEMORY_LIMIT:512}",
+      "RAILWAY_CONNECTION_TIMEOUT": "${RAILWAY_CONNECTION_TIMEOUT:30000}",
+      "RAILWAY_MAX_RETRY_ATTEMPTS": "${RAILWAY_MAX_RETRY_ATTEMPTS:10}"
+    }
+  },
+  "services": {
+    "database": {
+      "type": "postgres",
+      "name": "PostgreSQL Database",
+      "description": "Stores incident history, configurations, and audit trails"
     }
   }
 }
