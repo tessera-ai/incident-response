@@ -162,7 +162,11 @@ defmodule RailwayApp.Remediation.Coordinator do
       "stop" ->
         # Stop is handled as a no-op for now, as Railway doesn't have a direct stop mutation
         # Consider using serviceInstanceDelete or just logging
-        Logger.warning("Stop action requested but not implemented - requires manual intervention", %{})
+        Logger.warning(
+          "Stop action requested but not implemented - requires manual intervention",
+          %{}
+        )
+
         {:ok, "Stop action acknowledged - manual intervention recommended"}
 
       "none" ->

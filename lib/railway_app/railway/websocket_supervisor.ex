@@ -171,7 +171,11 @@ defmodule RailwayApp.Railway.WebSocketSupervisor do
       after
         5000 ->
           Process.demonitor(ref, [:flush])
-          Logger.warning("Timed out waiting for WebSocket process #{inspect(pid)} to terminate", %{})
+
+          Logger.warning(
+            "Timed out waiting for WebSocket process #{inspect(pid)} to terminate",
+            %{}
+          )
       end
     else
       # Just try to stop to be safe (idempotent)

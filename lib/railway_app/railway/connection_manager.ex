@@ -502,7 +502,11 @@ defmodule RailwayApp.Railway.ConnectionManager do
           Logger.debug("Service #{service_id} connection healthy")
 
         false ->
-          Logger.warning("Service #{service_id} connection unhealthy, attempting reconnection", %{})
+          Logger.warning(
+            "Service #{service_id} connection unhealthy, attempting reconnection",
+            %{}
+          )
+
           schedule_service_reconnection(project_id, service_id)
       end
     else
