@@ -14,49 +14,55 @@ This template provides a comprehensive incident response and log analysis system
 
 To use this template, you must configure the following environment variables:
 
-### 🚀 **Required for Basic Functionality**
+### 🚀 Core (required to boot)
 
-#### Railway Integration
-- `RAILWAY_API_TOKEN`: Your Railway API token
-  - **How to get**: Go to Railway Dashboard → Account → API Tokens → Create New Token
-  - **Permissions needed**: Project read access, environment access
+- `SECRET_KEY_BASE`: Phoenix secret (generate with `mix phx.gen.secret`)
+- `RAILWAY_API_TOKEN`: Railway API token (Dashboard → Account → API Tokens)
+- `OPENAI_API_KEY`: OpenAI API key (app will not start without it)
 
-#### LLM Provider
-- `OPENAI_API_KEY`: Your OpenAI API key
-  - **How to get**: https://platform.openai.com/api-keys
-  - **Required**: The application will not start without this
+### 🔔 Slack notifications (required for Slack features)
 
-### 🔔 **Required for Slack Notifications**
+- `SLACK_BOT_TOKEN`: Bot token (starts with `xoxb-`; scopes `chat:write`, `channels:read`, `users:read`)
+- `SLACK_SIGNING_SECRET`: Signing secret from Slack app → Basic Information
+- `SLACK_CHANNEL_ID`: Channel ID (starts with `C` or `G`)
 
-#### Slack App Configuration
-- `SLACK_BOT_TOKEN`: Your Slack bot token (starts with `xoxb-`)
-  - **How to get**: Create a Slack app at https://api.slack.com/apps
-  - **Required scopes**: `chat:write`, `channels:read`, `users:read`
+### 🗄️ Database & auto-provided values (no action needed)
 
-- `SLACK_SIGNING_SECRET`: Your Slack signing secret
-  - **How to get**: In your Slack app settings → Basic Information → App Credentials
+- `DATABASE_URL`: Auto-provided by the bundled Railway Postgres service (override only if using external DB)
+- Railway injects: `PORT`, `RAILWAY_PUBLIC_DOMAIN` (used as `PHX_HOST` fallback), `RAILWAY_PROJECT_ID`, `RAILWAY_ENVIRONMENT_ID`, `RAILWAY_ENVIRONMENT`, `RAILWAY_SERVICE_ID`, `RAILWAY_SERVICE_NAME`, `RAILWAY_PROJECT_NAME`, `RAILWAY_ENVIRONMENT_NAME`, `RAILWAY_PRIVATE_DOMAIN`, `RAILWAY_STATIC_URL`, `RAILWAY_SERVICE_RAILWAY_TEMPLATE_URL`
+- `PHX_HOST` (optional; defaults to `RAILWAY_PUBLIC_DOMAIN`)
+- `PHX_SERVER` defaults to true in prod via the release
+- `DNS_CLUSTER_QUERY` (optional; only if clustering multiple instances)
 
-- `SLACK_CHANNEL_ID`: The target Slack channel ID (starts with `C` or `G`)
-  - **How to get**: Right-click on channel in Slack → "Copy Link" → extract ID from URL
+### 📡 Monitoring targets (optional, recommended)
 
-### ⚙️ **Optional Configuration**
+- `RAILWAY_MONITORED_PROJECTS`: Comma-separated Railway project IDs
+- `RAILWAY_MONITORED_ENVIRONMENTS`: Comma-separated environment IDs (defaults to `production` if blank)
+- `RAILWAY_MONITORED_SERVICES`: Comma-separated service IDs (optional; pairs with the projects/environments above)
 
-#### Monitoring Targets
-- `RAILWAY_MONITORED_PROJECTS`: Comma-separated list of Railway Project IDs to monitor
-- `RAILWAY_MONITORED_ENVIRONMENTS`: Comma-separated list of Railway Environment IDs to monitor
-- `RAILWAY_MONITORED_SERVICES`: Comma-separated list of Railway Service IDs to monitor (optional)
+### 🤖 LLM provider options
 
-#### Optional LLM Providers
-- `ANTHROPIC_API_KEY`: Anthropic API key for Claude integration
-- `LLM_DEFAULT_PROVIDER`: Default LLM provider (defaults to "openai")
+- `LLM_DEFAULT_PROVIDER`: `openai` or `anthropic` (default: `openai`)
+- `ANTHROPIC_API_KEY`: Claude API key (optional)
 
-#### Performance Tuning
-- `RAILWAY_POLLING_INTERVAL`: Service polling interval in milliseconds (default: 30000)
-- `RAILWAY_RATE_LIMIT_HR`: Rate limit requests per hour (default: 10000)
-- `RAILWAY_RATE_LIMIT_SEC`: Rate limit requests per second (default: 50)
-- `RAILWAY_MEMORY_LIMIT`: Memory limit in MB (default: 512)
-- `RAILWAY_CONNECTION_TIMEOUT`: Connection timeout in milliseconds (default: 30000)
-- `RAILWAY_MAX_RETRY_ATTEMPTS`: Maximum retry attempts for failed requests (default: 10)
+### ⚙️ Performance and connection tuning (optional; defaults shown)
+
+- `RAILWAY_CONNECTION_TIMEOUT` (ms, default `30000`)
+- `RAILWAY_MAX_RETRY_ATTEMPTS` (default `10`)
+- `RAILWAY_MAX_BACKOFF` (ms, default `60000`)
+- `RAILWAY_HEARTBEAT_INTERVAL` (ms, default `30000`)
+- `RAILWAY_HEARTBEAT_TIMEOUT` (ms, default `45000`)
+- `RAILWAY_POLLING_INTERVAL` (seconds, default `30`)
+- `RAILWAY_BATCH_MIN_SIZE` (default `10`)
+- `RAILWAY_BATCH_MAX_SIZE` (default `1000`)
+- `RAILWAY_BATCH_WINDOW_MIN` (seconds, default `5`)
+- `RAILWAY_BATCH_WINDOW_MAX` (seconds, default `300`)
+- `RAILWAY_BUFFER_RETENTION` (hours, default `24`)
+- `RAILWAY_MEMORY_LIMIT` (MB, default `512`)
+- `RAILWAY_RATE_LIMIT_HR` (default `10000`)
+- `RAILWAY_RATE_LIMIT_SEC` (default `50`)
+- `RAILWAY_GRAPHQL_ENDPOINT` (default `https://backboard.railway.app/graphql/v2`)
+- `RAILWAY_WS_ENDPOINT` (default `wss://backboard.railway.app/graphql/v2`)
 
 ## Setup Instructions
 
@@ -64,6 +70,7 @@ To use this template, you must configure the following environment variables:
 
 1. **Deploy this template** to your Railway account
 2. **Get Railway API Token**:
+
    - Go to Railway Dashboard → Account → API Tokens
    - Create a new token with read permissions
    - Add `RAILWAY_API_TOKEN` to your environment variables
@@ -83,11 +90,13 @@ To use this template, you must configure the following environment variables:
 ### 3. Slack Setup
 
 1. **Create Slack App**:
+
    - Go to https://api.slack.com/apps → "Create New App"
    - Choose "From scratch"
    - Enter app name and select your workspace
 
 2. **Configure Bot Permissions**:
+
    - Go to "OAuth & Permissions"
    - Add these Bot Token Scopes:
      - `chat:write` - Send messages
@@ -95,17 +104,20 @@ To use this template, you must configure the following environment variables:
      - `users:read` - Access user information
 
 3. **Enable Events**:
+
    - Go to "Event Subscriptions"
    - Enable Events
    - Add Request URL: `https://your-domain.railway.app/api/slack/events`
    - Subscribe to: `app_mention`, `message.channels`
 
 4. **Get Credentials**:
+
    - Copy "Bot User OAuth Token" (starts with `xoxb-`)
    - Copy "Signing Secret" from Basic Information
    - Add both to environment variables
 
 5. **Add to Channel**:
+
    - Install the app to your workspace
    - Invite the bot to your target channel: `/invite @your-app-name`
 
@@ -119,6 +131,7 @@ Add all required environment variables to your Railway service:
 
 ```bash
 # Required
+SECRET_KEY_BASE=$(mix phx.gen.secret)
 RAILWAY_API_TOKEN=your_railway_api_token
 OPENAI_API_KEY=your_openai_api_key
 SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
@@ -128,6 +141,22 @@ SLACK_CHANNEL_ID=C0123456789
 # Optional - Monitoring Targets
 RAILWAY_MONITORED_PROJECTS=project_id_1,project_id_2
 RAILWAY_MONITORED_ENVIRONMENTS=env_id_1,env_id_2
+RAILWAY_MONITORED_SERVICES=service_id_1,service_id_2
+
+# Optional tuning
+RAILWAY_POLLING_INTERVAL=30
+RAILWAY_MAX_RETRY_ATTEMPTS=10
+RAILWAY_MAX_BACKOFF=60000
+RAILWAY_HEARTBEAT_INTERVAL=30000
+RAILWAY_HEARTBEAT_TIMEOUT=45000
+RAILWAY_RATE_LIMIT_HR=10000
+RAILWAY_RATE_LIMIT_SEC=50
+RAILWAY_BATCH_MIN_SIZE=10
+RAILWAY_BATCH_MAX_SIZE=1000
+RAILWAY_BATCH_WINDOW_MIN=5
+RAILWAY_BATCH_WINDOW_MAX=300
+RAILWAY_BUFFER_RETENTION=24
+RAILWAY_MEMORY_LIMIT=512
 ```
 
 ### 5. Deploy and Test
@@ -167,6 +196,7 @@ Access your service dashboard at: `https://your-domain.railway.app`
 ## Support
 
 For issues with:
+
 - **Railway**: https://docs.railway.app
 - **OpenAI**: https://platform.openai.com/docs
 - **Slack API**: https://api.slack.com/docs
@@ -174,4 +204,4 @@ For issues with:
 ---
 
 **Template Version**: 1.0.0
-**Last Updated**: 2025-12-07
+**Last Updated**: 2025-12-08
