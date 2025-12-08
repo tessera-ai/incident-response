@@ -1,5 +1,6 @@
 defmodule RailwayApp.Railway.ConnectionManagerTest do
   use ExUnit.Case, async: false
+  @moduletag :db
 
   alias RailwayApp.Railway.ConnectionManager
 

@@ -19,6 +19,7 @@ defmodule RailwayApp.DataCase do
   using do
     quote do
       alias RailwayApp.Repo
+      @moduletag :db
 
       import Ecto
       import Ecto.Changeset

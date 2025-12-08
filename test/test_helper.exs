@@ -1,8 +1,12 @@
+skip_db = System.get_env("SKIP_DB") == "true"
+
+if skip_db do
+  ExUnit.configure(exclude: [:db])
+end
+
 ExUnit.start()
 
 # Only set up Ecto sandbox if database is not skipped
-skip_db = System.get_env("SKIP_DB") == "true"
-
 unless skip_db do
   try do
     Ecto.Adapters.SQL.Sandbox.mode(RailwayApp.Repo, :manual)

@@ -21,6 +21,7 @@ defmodule RailwayAppWeb.ConnCase do
     quote do
       # The default endpoint for testing
       @endpoint RailwayAppWeb.Endpoint
+      @moduletag :db
 
       use RailwayAppWeb, :verified_routes
 

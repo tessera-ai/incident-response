@@ -64,6 +64,9 @@ defmodule RailwayApp.ApplicationTest do
       System.put_env("RAILWAY_API_TOKEN", "test_railway_api_token")
       System.put_env("RAILWAY_PROJECT_ID", "test_project_id")
       System.put_env("RAILWAY_ENVIRONMENT_ID", "test_environment_id")
+      System.put_env("SLACK_BOT_TOKEN", "xoxb-test")
+      System.put_env("SLACK_SIGNING_SECRET", "test_signing_secret")
+      System.put_env("SLACK_CHANNEL_ID", "C1234567890")
       System.put_env("MIX_ENV", "prod")
 
       # Should start successfully (may have other warnings about missing optional vars)
