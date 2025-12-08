@@ -21,36 +21,13 @@ Click the "Deploy on Railway" button above to deploy this template to your Railw
 
 ### 2. Configure Required Environment Variables
 
-Go to your service's **Variables** tab in Railway and add these **required** variables:
+Go to your service's **Variables** tab in Railway and add the required variables.
 
-#### 🚀 Must-Have Variables
-
-```bash
-# Railway Integration - Get from: Railway Dashboard → Account → API Tokens
-RAILWAY_API_TOKEN=your_railway_api_token_here
-
-# LLM Provider - Get from: https://platform.openai.com/api-keys
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Slack Integration - Get from: https://api.slack.com/apps
-SLACK_BOT_TOKEN=xoxb-your_slack_bot_token_here
-SLACK_SIGNING_SECRET=your_slack_signing_secret_here
-SLACK_CHANNEL_ID=C0123456789
-```
-
-#### 📊 Optional - Monitoring Targets
-
-```bash
-# Monitor specific Railway projects (comma-separated)
-RAILWAY_MONITORED_PROJECTS=proj_abc123,proj_def456
-
-# Monitor specific environments (comma-separated)
-RAILWAY_MONITORED_ENVIRONMENTS=production,staging
-```
-
-> **💡 Need help getting these values?** See the detailed setup guides below.
+> **Detailed, up-to-date variable list and defaults:** see `RAILWAY_TEMPLATE.md` (primary source for required/optional env vars and defaults).
 
 ## 📋 Setup Guides
+
+For the full, authoritative variable list (required, optional, defaults), see `RAILWAY_TEMPLATE.md`.
 
 ### 🔗 Getting Your Railway API Token
 
@@ -70,6 +47,7 @@ RAILWAY_MONITORED_ENVIRONMENTS=production,staging
 4. Add it to `RAILWAY_MONITORED_PROJECTS` (comma-separated for multiple)
 
 **Example:**
+
 ```bash
 RAILWAY_MONITORED_PROJECTS=80661543-f4f8-473e-ae39-0e49270938de,another-project-id
 ```
