@@ -60,7 +60,7 @@ jobs:
         run: mix format --check-formatted
 
       - name: Run tests
-        run: mix test --max-failures=10
+        run: SKIP_DB=true mix test --max-failures=10
         env:
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres

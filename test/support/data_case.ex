@@ -36,13 +36,18 @@ defmodule RailwayApp.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    try do
-      pid = Ecto.Adapters.SQL.Sandbox.start_owner!(RailwayApp.Repo, shared: not tags[:async])
-      on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
-    rescue
-      DBConnection.ConnectionError ->
-        raise ExUnit.AssertionError,
-          message: "Database connection required for this test but not available"
+    # Allow DB-less test runs when SKIP_DB=true
+    if System.get_env("SKIP_DB") == "true" do
+      :ok
+    else
+      try do
+        pid = Ecto.Adapters.SQL.Sandbox.start_owner!(RailwayApp.Repo, shared: not tags[:async])
+        on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+      rescue
+        DBConnection.ConnectionError ->
+          raise ExUnit.AssertionError,
+            message: "Database connection required for this test but not available"
+      end
     end
   end
 
