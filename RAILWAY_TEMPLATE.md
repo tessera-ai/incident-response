@@ -29,21 +29,17 @@ To use this template, you must configure the following environment variables:
 ### 🗄️ Auto-provided by Railway (no action)
 
 - `DATABASE_URL`: From the bundled Postgres service (ensure the Postgres addon is attached)
-- Railway injects: `PORT`, `RAILWAY_PUBLIC_DOMAIN` (used as `PHX_HOST` fallback), `RAILWAY_PROJECT_ID`, `RAILWAY_ENVIRONMENT_ID`, `RAILWAY_ENVIRONMENT`, `RAILWAY_SERVICE_ID`, `RAILWAY_SERVICE_NAME`, `RAILWAY_PROJECT_NAME`, `RAILWAY_ENVIRONMENT_NAME`, `RAILWAY_PRIVATE_DOMAIN`, `RAILWAY_STATIC_URL`, `RAILWAY_SERVICE_RAILWAY_TEMPLATE_URL`
-- `PHX_SERVER` defaulted to true in the template; `MIX_ENV` defaulted to `prod`
-- `PHX_HOST` is optional (code falls back to `RAILWAY_PUBLIC_DOMAIN`)
-- `DNS_CLUSTER_QUERY` is optional (only set if clustering multiple instances)
 
-### 📡 Monitoring targets (optional)
+### 📡 Monitoring targets
 
 - `RAILWAY_MONITORED_PROJECTS`: Comma-separated Railway project IDs
 - `RAILWAY_MONITORED_ENVIRONMENTS`: Comma-separated environment IDs (defaults to `production` if blank)
-- `RAILWAY_MONITORED_SERVICES`: Comma-separated service IDs (optional; pairs with the projects/environments above)
+- `RAILWAY_MONITORED_SERVICES`: Comma-separated service IDs (pairs with the projects/environments above)
 
-### 🤖 LLM provider options (optional)
+### 🤖 LLM provider options
 
 - `LLM_DEFAULT_PROVIDER`: `openai` or `anthropic` (default: `openai`)
-- `ANTHROPIC_API_KEY`: Claude API key (optional)
+- `OPENAI_API_KEY`: OpenAI API key from platform
 
 ### ⚙️ Advanced tuning (optional; code has sane defaults)
 
@@ -128,7 +124,7 @@ SLACK_BOT_TOKEN=xoxb-your-slack-bot-token
 SLACK_SIGNING_SECRET=your_slack_signing_secret
 SLACK_CHANNEL_ID=C0123456789
 
-# Optional - Monitoring Targets
+# Monitoring Targets
 RAILWAY_MONITORED_PROJECTS=project_id_1,project_id_2
 RAILWAY_MONITORED_ENVIRONMENTS=env_id_1,env_id_2
 RAILWAY_MONITORED_SERVICES=service_id_1,service_id_2
@@ -190,8 +186,3 @@ For issues with:
 - **Railway**: https://docs.railway.app
 - **OpenAI**: https://platform.openai.com/docs
 - **Slack API**: https://api.slack.com/docs
-
----
-
-**Template Version**: 1.0.0
-**Last Updated**: 2025-12-08
