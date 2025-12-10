@@ -1,15 +1,11 @@
 {
   "$schema": "https://schema.railpack.com",
-  "provider": "docker",
-  "buildAptPackages": [
-    "git",
-    "curl",
-    "wget",
-    "ca-certificates",
-    "gnupg",
-    "software-properties-common",
-    "build-essential"
-  ],
+  "language": "elixir",
+  "build": {
+    "elixir": "1.19.2",
+    "erlang": "28"
+  },
+  "buildAptPackages": ["git", "curl", "build-essential", "npm"],
   "caches": {
     "hex-deps": { "directory": "/root/.hex", "type": "shared" },
     "mix-deps": { "directory": "/root/.cache/mix", "type": "shared" },
@@ -18,9 +14,6 @@
   "steps": {
     "install": {
       "commands": [
-        "wget -O elixir-install.sh https://build.hex.pm/install.sh",
-        "chmod +x elixir-install.sh",
-        "./elixir-install.sh -E v1.19.2",
         "mix local.hex --force",
         "mix local.rebar --force",
         "mix deps.get --only prod",
@@ -28,22 +21,10 @@
       ]
     },
     "build": {
-      "inputs": [{ "step": "install" }],
       "commands": ["npm run build", "mix assets.deploy", "mix release"]
     }
   },
   "deploy": {
-    "base": { "step": "build" },
-    "inputs": [{ "step": "build" }],
-    "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate' && /app/_build/prod/rel/railway_app/bin/railway_app start",
-    "variables": {
-      "PORT": "4000",
-      "PHX_SERVER": "true",
-      "MIX_ENV": "prod"
-    },
-    "paths": [
-      "/root/.mix/escripts",
-      "/app/_build/prod/rel/railway_app/bin"
-    ]
+    "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate' && /app/_build/prod/rel/railway_app/bin/railway_app start"
   }
 }
