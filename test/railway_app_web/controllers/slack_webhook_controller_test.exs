@@ -1,6 +1,8 @@
 defmodule RailwayAppWeb.SlackWebhookControllerTest do
   use RailwayAppWeb.ConnCase, async: false
 
+  alias RailwayApp.{Incident, Repo}
+
   setup do
     # Store and restore original configs
     original_slack = Application.get_env(:railway_app, :slack, [])
@@ -16,7 +18,24 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       Application.put_env(:railway_app, :llm, original_llm)
     end)
 
-    :ok
+    {:ok, incident: insert_incident()}
+  end
+
+  defp insert_incident do
+    {:ok, incident} =
+      %Incident{}
+      |> Incident.changeset(%{
+        service_id: "test-service",
+        service_name: "Test Service",
+        environment_id: "test-env",
+        signature: "sig-#{System.unique_integer()}",
+        severity: "critical",
+        recommended_action: "restart",
+        detected_at: DateTime.utc_now()
+      })
+      |> Repo.insert()
+
+    incident
   end
 
   # =============================================================================
@@ -34,14 +53,14 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       assert response(conn, 400) =~ "Invalid payload"
     end
 
-    test "returns 200 for valid auto_fix action", %{conn: conn} do
+    test "returns 200 for valid auto_fix action", %{conn: conn, incident: incident} do
       payload =
         Jason.encode!(%{
           "type" => "block_actions",
           "actions" => [
             %{
               "action_id" => "auto_fix",
-              "value" => "auto_fix:incident_123"
+              "value" => "auto_fix:#{incident.id}"
             }
           ],
           "channel" => %{"id" => "C123456"},
@@ -53,14 +72,14 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       assert response(conn, 200) == ""
     end
 
-    test "returns 200 for valid start_chat action", %{conn: conn} do
+    test "returns 200 for valid start_chat action", %{conn: conn, incident: incident} do
       payload =
         Jason.encode!(%{
           "type" => "block_actions",
           "actions" => [
             %{
               "action_id" => "start_chat",
-              "value" => "start_chat:incident_123"
+              "value" => "start_chat:#{incident.id}"
             }
           ],
           "channel" => %{"id" => "C123456"},
@@ -72,14 +91,14 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       assert response(conn, 200) == ""
     end
 
-    test "returns 200 for valid ignore action", %{conn: conn} do
+    test "returns 200 for valid ignore action", %{conn: conn, incident: incident} do
       payload =
         Jason.encode!(%{
           "type" => "block_actions",
           "actions" => [
             %{
               "action_id" => "ignore",
-              "value" => "ignore:incident_123"
+              "value" => "ignore:#{incident.id}"
             }
           ],
           "channel" => %{"id" => "C123456"},
@@ -91,14 +110,14 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       assert response(conn, 200) == ""
     end
 
-    test "returns 200 for valid confirm_auto_fix action", %{conn: conn} do
+    test "returns 200 for valid confirm_auto_fix action", %{conn: conn, incident: incident} do
       payload =
         Jason.encode!(%{
           "type" => "block_actions",
           "actions" => [
             %{
               "action_id" => "confirm_auto_fix",
-              "value" => "confirm:incident_123:restart"
+              "value" => "confirm:#{incident.id}:restart"
             }
           ],
           "channel" => %{"id" => "C123456"},
@@ -110,14 +129,14 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
       assert response(conn, 200) == ""
     end
 
-    test "returns 200 for valid cancel_auto_fix action", %{conn: conn} do
+    test "returns 200 for valid cancel_auto_fix action", %{conn: conn, incident: incident} do
       payload =
         Jason.encode!(%{
           "type" => "block_actions",
           "actions" => [
             %{
               "action_id" => "cancel_auto_fix",
-              "value" => "cancel:incident_123"
+              "value" => "cancel:#{incident.id}"
             }
           ],
           "channel" => %{"id" => "C123456"},
@@ -249,28 +268,31 @@ defmodule RailwayAppWeb.SlackWebhookControllerTest do
 
   describe "action value parsing" do
     test "parses auto_fix value correctly" do
-      value = "auto_fix:incident_123"
-      [action, id] = String.split(value, ":")
+      incident_id = Ecto.UUID.generate()
+      value = "auto_fix:#{incident_id}"
+      [action, parsed_id] = String.split(value, ":")
 
       assert action == "auto_fix"
-      assert id == "incident_123"
+      assert parsed_id == incident_id
     end
 
     test "parses confirm value correctly" do
-      value = "confirm:incident_123:restart"
-      [action, incident_id, recommended_action] = String.split(value, ":")
+      incident_id = Ecto.UUID.generate()
+      value = "confirm:#{incident_id}:restart"
+      [action, parsed_id, recommended_action] = String.split(value, ":")
 
       assert action == "confirm"
-      assert incident_id == "incident_123"
+      assert parsed_id == incident_id
       assert recommended_action == "restart"
     end
 
     test "parses cancel value correctly" do
-      value = "cancel:incident_123"
-      [action, id] = String.split(value, ":")
+      incident_id = Ecto.UUID.generate()
+      value = "cancel:#{incident_id}"
+      [action, parsed_id] = String.split(value, ":")
 
       assert action == "cancel"
-      assert id == "incident_123"
+      assert parsed_id == incident_id
     end
   end
 end

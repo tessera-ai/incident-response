@@ -5,6 +5,8 @@ defmodule RailwayApp.Conversations.ConversationManagerTest do
   alias RailwayApp.{Incidents, ServiceConfigs}
 
   setup do
+    start_supervised!(RailwayApp.Conversations.ConversationManager)
+
     # Create test service config
     {:ok, service_config} =
       ServiceConfigs.create_service_config(%{

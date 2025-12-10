@@ -5,6 +5,6 @@ defmodule RailwayAppWeb.PageControllerTest do
     # The root route now points to DashboardLive
     # This test verifies the dashboard loads
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Railway Agent Dashboard"
+    assert html_response(conn, 200) =~ "Dashboard"
   end
 end

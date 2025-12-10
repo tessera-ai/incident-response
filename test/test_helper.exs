@@ -4,6 +4,11 @@ if skip_db do
   ExUnit.configure(exclude: [:db])
 end
 
+# Ensure the application (and Repo) are started for DB-backed tests
+unless skip_db do
+  {:ok, _} = Application.ensure_all_started(:railway_app)
+end
+
 ExUnit.start()
 
 # Only set up Ecto sandbox if database is not skipped

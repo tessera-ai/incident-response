@@ -59,8 +59,26 @@ defmodule RailwayApp.Conversations do
   - `:offset` - Number of sessions to skip
   """
   def list_sessions(opts \\ []) do
-    limit = Keyword.get(opts, :limit, 50)
-    offset = Keyword.get(opts, :offset, 0)
+    {limit, offset} =
+      cond do
+        is_integer(opts) ->
+          {opts, 0}
+
+        is_map(opts) ->
+          {
+            normalize_int(Map.get(opts, :limit) || Map.get(opts, "limit"), 50),
+            normalize_int(Map.get(opts, :offset) || Map.get(opts, "offset"), 0)
+          }
+
+        is_list(opts) ->
+          {
+            normalize_int(Keyword.get(opts, :limit, 50), 50),
+            normalize_int(Keyword.get(opts, :offset, 0), 0)
+          }
+
+        true ->
+          {50, 0}
+      end
 
     from(s in ConversationSession,
       order_by: [desc: s.started_at],
@@ -120,5 +138,18 @@ defmodule RailwayApp.Conversations do
 
     from(s in ConversationSession, where: s.started_at < ^cutoff_date)
     |> Repo.delete_all()
+  end
+
+  defp normalize_int(value, default) do
+    cond do
+      is_integer(value) -> value
+      is_binary(value) ->
+        case Integer.parse(value) do
+          {int, _} -> int
+          :error -> default
+        end
+
+      true -> default
+    end
   end
 end

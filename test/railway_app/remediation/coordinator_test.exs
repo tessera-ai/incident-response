@@ -5,6 +5,8 @@ defmodule RailwayApp.Remediation.CoordinatorTest do
   alias RailwayApp.{Incidents, ServiceConfigs, RemediationActions}
 
   setup do
+    start_supervised!(Coordinator)
+
     # Create a test service config with auto-remediation enabled
     {:ok, service_config} =
       ServiceConfigs.create_service_config(%{

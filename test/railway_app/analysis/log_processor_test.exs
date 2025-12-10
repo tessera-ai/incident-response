@@ -5,6 +5,8 @@ defmodule RailwayApp.Analysis.LogProcessorTest do
   alias RailwayApp.{Incidents, ServiceConfigs}
 
   setup do
+    start_supervised!(LogProcessor)
+
     # Create a test service config
     {:ok, service_config} =
       ServiceConfigs.create_service_config(%{

@@ -10,6 +10,8 @@ defmodule RailwayApp.Railway.ConnectionManagerTest do
       System.put_env("DATABASE_URL", "postgresql://test:test@localhost/test")
       System.put_env("SECRET_KEY_BASE", "test_secret_key_base_for_testing")
 
+      start_supervised!(RailwayApp.Railway.WebSocketSupervisor)
+
       # Checkout connection and allow shared access
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(RailwayApp.Repo)
       Ecto.Adapters.SQL.Sandbox.mode(RailwayApp.Repo, {:shared, self()})

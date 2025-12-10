@@ -11,10 +11,10 @@ defmodule RailwayApp.Application do
     # Validate required environment variables
     validate_environment!()
 
-    # Check if we're skipping database (for unit tests)
+    env = Application.get_env(:railway_app, :env, :dev)
     skip_db = System.get_env("SKIP_DB") == "true"
 
-    base_children = [
+    common_children = [
       RailwayAppWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:railway_app, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RailwayApp.PubSub},
@@ -22,6 +22,30 @@ defmodule RailwayApp.Application do
       {Registry, keys: :unique, name: RailwayApp.Registry},
       # Task supervisor for concurrent operations
       {Task.Supervisor, name: RailwayApp.TaskSupervisor},
+      # Start to serve requests, typically the last entry
+      RailwayAppWeb.Endpoint
+    ]
+
+    children =
+      cond do
+        env == :test ->
+          # In tests, start only the minimal set of processes; individual tests
+          # will start feature-specific supervisors under the sandbox.
+          maybe_with_repo(common_children, skip_db)
+
+        skip_db ->
+          common_children ++ runtime_children()
+
+        true ->
+          [RailwayApp.Repo | common_children ++ runtime_children()]
+      end
+
+    opts = [strategy: :one_for_one, name: RailwayApp.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  defp runtime_children do
+    [
       # Dynamic supervisor for Railway WebSocket connections
       RailwayApp.Railway.WebSocketSupervisor,
       # Connection manager for orchestrating service connections
@@ -38,22 +62,12 @@ defmodule RailwayApp.Application do
       # Conversation manager for Slack interactions
       RailwayApp.Conversations.ConversationManager,
       # Retention cleanup worker (runs daily)
-      RailwayApp.Retention.CleanupWorker,
-      # Start to serve requests, typically the last entry
-      RailwayAppWeb.Endpoint
+      RailwayApp.Retention.CleanupWorker
     ]
+  end
 
-    children =
-      if skip_db do
-        base_children
-      else
-        [RailwayApp.Repo | base_children]
-      end
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: RailwayApp.Supervisor]
-    Supervisor.start_link(children, opts)
+  defp maybe_with_repo(children, skip_db) do
+    if skip_db, do: children, else: [RailwayApp.Repo | children]
   end
 
   defp validate_environment! do
