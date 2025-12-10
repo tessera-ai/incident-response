@@ -1,11 +1,15 @@
 {
   "$schema": "https://schema.railpack.com",
-  "provider": "elixir",
-  "packages": {
-    "elixir": "1.19.2",
-    "otp": "28"
-  },
-  "buildAptPackages": ["git", "curl"],
+  "provider": "docker",
+  "buildAptPackages": [
+    "git",
+    "curl",
+    "wget",
+    "ca-certificates",
+    "gnupg",
+    "software-properties-common",
+    "build-essential"
+  ],
   "caches": {
     "hex-deps": { "directory": "/root/.hex", "type": "shared" },
     "mix-deps": { "directory": "/root/.cache/mix", "type": "shared" },
@@ -13,25 +17,19 @@
   },
   "steps": {
     "install": {
-      "inputs": [
-        {
-          "local": true,
-          "include": ["."],
-          "exclude": [".git", "_build", "deps"]
-        }
-      ],
       "commands": [
+        "wget -O elixir-install.sh https://build.hex.pm/install.sh",
+        "chmod +x elixir-install.sh",
+        "./elixir-install.sh -E v1.19.2",
         "mix local.hex --force",
         "mix local.rebar --force",
         "mix deps.get --only prod",
         "npm install"
-      ],
-      "caches": ["hex-deps", "mix-deps"]
+      ]
     },
     "build": {
       "inputs": [{ "step": "install" }],
-      "commands": ["npm run build", "mix assets.deploy", "mix release"],
-      "caches": ["build-cache"]
+      "commands": ["npm run build", "mix assets.deploy", "mix release"]
     }
   },
   "deploy": {
@@ -41,11 +39,11 @@
     "variables": {
       "PORT": "4000",
       "PHX_SERVER": "true",
-      "MIX_ENV": "prod",
-      "SERVICE_NAME": "Incident Response Agent",
-      "SERVICE_ICON_URL": "https://tessera.help/logo.svg",
-      "HTTP_PROXY_PORT": "4000"
+      "MIX_ENV": "prod"
     },
-    "paths": ["/app/_build/prod/rel/railway_app/bin"]
+    "paths": [
+      "/root/.mix/escripts",
+      "/app/_build/prod/rel/railway_app/bin"
+    ]
   }
 }
