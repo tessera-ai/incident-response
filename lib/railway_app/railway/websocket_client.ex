@@ -8,7 +8,7 @@ defmodule RailwayApp.Railway.WebSocketClient do
   use WebSockex
   require Logger
 
-  @default_log_filter "severity:error"
+  @default_log_filter "level:error"
   @reconnect_interval 5_000
   @max_backoff 60_000
 
@@ -443,7 +443,11 @@ defmodule RailwayApp.Railway.WebSocketClient do
       opts
       |> Map.get(:filter)
       |> case do
-        nil -> Map.get(opts, "filter", @default_log_filter)
+        nil ->
+          case Map.get(opts, "filter") do
+            nil -> @default_log_filter
+            value -> value
+          end
         value -> value
       end
 

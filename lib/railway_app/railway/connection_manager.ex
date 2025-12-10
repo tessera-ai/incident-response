@@ -376,7 +376,17 @@ defmodule RailwayApp.Railway.ConnectionManager do
         # Subscribe to environment logs if auto-subscribe is enabled
         if Map.get(config, :auto_subscribe, true) && environment_id do
           Logger.info("Subscribing to environment logs for env #{environment_id}")
-          RailwayApp.Railway.WebSocketClient.subscribe_to_logs(pid, environment_id, %{})
+
+          # Build filter with service ID if specified (combine with default level filter)
+          filter_opts =
+            if service_id && service_id != "" do
+              # GraphQL filter matches dashboard syntax: e.g., "service:<id> level:error"
+              %{"filter" => "service:#{service_id} level:error"}
+            else
+              %{}
+            end
+
+          RailwayApp.Railway.WebSocketClient.subscribe_to_logs(pid, environment_id, filter_opts)
         else
           Logger.warning(
             "No environment_id configured for service #{service_id}. Log subscription may not work.",

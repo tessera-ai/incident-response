@@ -47,7 +47,11 @@ node_modules
 .cursor/
 .claude/
 .specify/
+CLAUDE.md
+AGENTS.md
+
 # macOS
 .DS_Store
+
+# exported schemas
 scripts/graphql-schema
-.cursor/

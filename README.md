@@ -2,7 +2,7 @@
 
 🚨 **Deploy this template to get an intelligent incident response system that monitors your Railway services and provides AI-powered alerts via Slack.**
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/your-org/incident-response-template)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/incident-response?referralCode=tessera_ai&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Features
 

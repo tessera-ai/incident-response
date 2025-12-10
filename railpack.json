@@ -1,56 +1,51 @@
 {
-  "version": "1.0",
-  "name": "Tessera AI Incident Response Agent",
-  "description": "AI-powered incident response system that monitors Railway services and provides intelligent Slack notifications with remediation suggestions",
-  "icon": "https://tessera.help/logo.svg",
-  "tags": ["monitoring", "incident-response", "slack", "ai", "logs", "alerts"],
-  "type": "elixir",
-  "build": {
-    "commands": [
-      "npm install",
-      "npm run build",
-      "mix deps.get --only prod",
-      "mix assets.deploy",
-      "mix release"
-    ],
-    "watchPatterns": [
-      "lib/**",
-      "config/**",
-      "priv/**",
-      "assets/**",
-      "mix.exs",
-      "mix.lock"
-    ]
+  "$schema": "https://schema.railpack.com",
+  "provider": "elixir",
+  "packages": {
+    "elixir": "1.19.2",
+    "otp": "28"
+  },
+  "buildAptPackages": ["git", "curl"],
+  "caches": {
+    "hex-deps": { "directory": "/root/.hex", "type": "shared" },
+    "mix-deps": { "directory": "/root/.cache/mix", "type": "shared" },
+    "build-cache": { "directory": "/app/_build", "type": "shared" }
+  },
+  "steps": {
+    "install": {
+      "inputs": [
+        {
+          "local": true,
+          "include": ["."],
+          "exclude": [".git", "_build", "deps"]
+        }
+      ],
+      "commands": [
+        "mix local.hex --force",
+        "mix local.rebar --force",
+        "mix deps.get --only prod",
+        "npm install"
+      ],
+      "caches": ["hex-deps", "mix-deps"]
+    },
+    "build": {
+      "inputs": [{ "step": "install" }],
+      "commands": ["npm run build", "mix assets.deploy", "mix release"],
+      "caches": ["build-cache"]
+    }
   },
   "deploy": {
+    "base": { "step": "build" },
+    "inputs": [{ "step": "build" }],
     "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate' && /app/_build/prod/rel/railway_app/bin/railway_app start",
-    "healthcheckPath": "/health",
-    "healthcheckTimeout": 300,
-    "port": 4000,
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10,
-    "environmentVariables": {
-      "LANG": "C.UTF-8",
-      "LC_ALL": "C.UTF-8",
-      "PHX_SERVER": "${PHX_SERVER:true}",
-      "MIX_ENV": "${MIX_ENV:prod}",
-      "DATABASE_URL": "${DATABASE_URL}",
-      "SECRET_KEY_BASE": "${{secret(64, \"abcdef0123456789\")}}",
-      "RAILWAY_API_TOKEN": "${RAILWAY_API_TOKEN}",
-      "OPENAI_API_KEY": "${OPENAI_API_KEY}",
-      "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-      "SLACK_SIGNING_SECRET": "${SLACK_SIGNING_SECRET}",
-      "SLACK_CHANNEL_ID": "${SLACK_CHANNEL_ID}",
-      "RAILWAY_MONITORED_PROJECTS": "${RAILWAY_MONITORED_PROJECTS:}",
-      "RAILWAY_MONITORED_ENVIRONMENTS": "${RAILWAY_MONITORED_ENVIRONMENTS:}",
-      "RAILWAY_MONITORED_SERVICES": "${RAILWAY_MONITORED_SERVICES:}"
-    }
-  },
-  "services": {
-    "database": {
-      "type": "postgres",
-      "name": "PostgreSQL Database",
-      "description": "Stores incident history, configurations, and audit trails"
-    }
+    "variables": {
+      "PORT": "4000",
+      "PHX_SERVER": "true",
+      "MIX_ENV": "prod",
+      "SERVICE_NAME": "Incident Response Agent",
+      "SERVICE_ICON_URL": "https://tessera.help/logo.svg",
+      "HTTP_PROXY_PORT": "4000"
+    },
+    "paths": ["/app/_build/prod/rel/railway_app/bin"]
   }
 }
