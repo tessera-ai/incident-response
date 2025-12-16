@@ -5,9 +5,9 @@
       "commands": [
         "mix deps.get --only prod",
         "mix deps.compile",
-        "mix ecto.migrate",
         "mix assets.setup",
         "mix compile",
+        "mix ecto.migrate",
         "mix assets.deploy",
         "mix release"
       ]
