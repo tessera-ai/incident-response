@@ -7,7 +7,7 @@
         "mix deps.compile",
         "mix assets.setup",
         "mix compile",
-        "mix ecto.migrate",
+        "mix ecto.migrate -r RailwayApp.Repo",
         "mix assets.deploy",
         "mix release"
       ]
