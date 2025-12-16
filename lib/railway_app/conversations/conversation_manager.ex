@@ -54,21 +54,13 @@ defmodule RailwayApp.Conversations.ConversationManager do
 
     SlackNotifier.send_message(
       channel_id,
-      "👋 Hi! I'm here to help with this incident. You can ask me to:\n\n" <>
-        "*Service Actions:*\n" <>
-        "• `restart` - Restart the current deployment\n" <>
-        "• `redeploy` - Fresh deploy from source\n" <>
-        "• `rollback` - Rollback to previous deployment\n" <>
-        "• `stop` - Stop the service (emergency)\n\n" <>
-        "*Scaling:*\n" <>
-        "• `scale memory <MB>` - Set memory limit (e.g., `scale memory 2048`)\n" <>
-        "• `scale replicas <N>` - Set replica count (e.g., `scale replicas 3`)\n\n" <>
+      "👋 Hi! I'm here to help with this incident. You can:\n\n" <>
         "*Information:*\n" <>
         "• `status` - Get current service status\n" <>
         "• `logs` - View recent logs\n" <>
         "• `deployments` - List recent deployments\n" <>
-        "• `help` - Show this message\n\n" <>
-        "What would you like to do?",
+        "• `help` - Show all commands\n\n" <>
+        "Just type your question or command and I'll do my best to help!",
       thread_ts
     )
 

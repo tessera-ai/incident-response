@@ -11,7 +11,8 @@ defmodule RailwayApp.Analysis.LogProcessor do
   require Logger
 
   @window_size 20
-  @batch_interval 5_000
+  # 5 minutes (300 seconds)
+  @batch_interval 300_000
   @critical_patterns [
     ~r/error|exception|fatal|crash/i,
     ~r/out of memory|oom/i,
@@ -91,12 +92,28 @@ defmodule RailwayApp.Analysis.LogProcessor do
 
   @impl true
   def handle_info(:analyze_batch, state) do
-    # Analyze all services with pending logs
+    # Only process if there are pending logs
     new_state =
-      state.pending_analysis
-      |> Enum.reduce(state, fn {service_id, logs}, acc_state ->
-        analyze_service_logs(service_id, logs, acc_state)
-      end)
+      if map_size(state.pending_analysis) > 0 do
+        state.pending_analysis
+        |> Enum.reduce(state, fn {service_id, logs}, acc_state ->
+          # Only analyze if there are error-level logs (save LLM tokens)
+          error_logs =
+            Enum.filter(logs, fn log ->
+              log[:level] in ["error", "fatal", "critical"]
+            end)
+
+          if length(error_logs) > 0 do
+            Logger.info("Processing #{length(error_logs)} error logs for service #{service_id}")
+            analyze_service_logs(service_id, error_logs, acc_state)
+          else
+            Logger.debug("No error logs for #{service_id} in last batch, skipping LLM analysis")
+            acc_state
+          end
+        end)
+      else
+        state
+      end
 
     # Clear pending analysis and reschedule
     new_state = %{new_state | pending_analysis: %{}, batch_timer: schedule_batch_analysis()}

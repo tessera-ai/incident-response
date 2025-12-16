@@ -64,13 +64,6 @@ defmodule RailwayApp.Remediation.Coordinator do
   end
 
   @impl true
-  def handle_info({:auto_fix_requested, incident_id, initiator}, state) do
-    Logger.info("Manual auto-fix requested for incident #{incident_id}")
-    execute_remediation(incident_id, "user", initiator)
-    {:noreply, state}
-  end
-
-  @impl true
   def handle_info(msg, state) do
     Logger.debug("Unhandled message in Coordinator: #{inspect(msg)}")
     {:noreply, state}

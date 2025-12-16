@@ -108,15 +108,6 @@ defmodule RailwayAppWeb.DashboardLive do
   end
 
   @impl true
-  def handle_event("manual_remediate", %{"incident_id" => incident_id}, socket) do
-    # Trigger manual remediation
-    RailwayApp.Remediation.Coordinator.execute_remediation(incident_id, "user", "dashboard")
-
-    socket = put_flash(socket, :info, "Remediation action initiated")
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_event("view_conversation", %{"session_id" => session_id}, socket) do
     messages = Conversations.list_messages(session_id)
 
