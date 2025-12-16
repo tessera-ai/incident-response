@@ -1,5 +1,41 @@
 {
   "$schema": "https://schema.railpack.com",
+  "pipeline": [
+    {
+      "name": "install",
+      "steps": [
+        {
+          "name": "Install Hex and Rebar",
+          "run": "mix local.hex --force && mix local.rebar --force"
+        },
+        {
+          "name": "Install Dependencies",
+          "run": "mix deps.get --only prod"
+        },
+        {
+          "name": "Compile Dependencies",
+          "run": "mix deps.compile"
+        }
+      ]
+    },
+    {
+      "name": "build",
+      "steps": [
+        {
+          "name": "Compile App",
+          "run": "mix compile"
+        },
+        {
+          "name": "Deploy Assets",
+          "run": "mix assets.deploy"
+        },
+        {
+          "name": "Create Release",
+          "run": "mix release"
+        }
+      ]
+    }
+  ],
   "deploy": {
     "startCommand": "/app/_build/prod/rel/railway_app/bin/railway_app eval 'RailwayApp.Release.migrate()' && /app/_build/prod/rel/railway_app/bin/railway_app start"
   }

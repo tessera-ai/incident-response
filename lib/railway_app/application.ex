@@ -13,17 +13,7 @@ defmodule RailwayApp.Application do
 
     env = Application.get_env(:railway_app, :env, :dev)
 
-    # Wait for database readiness in all environments (required for this app)
-    Logger.info("Checking database readiness...")
-
-    case RailwayApp.Startup.HealthChecker.wait_for_database_ready() do
-      :ok ->
-        Logger.info("Database ready, proceeding with application startup")
-
-      {:error, reason} ->
-        Logger.error("Database readiness check failed: #{inspect(reason)}")
-        raise "Database is not ready for application startup: #{inspect(reason)}"
-    end
+    # Database readiness is handled by the Repo supervisor
 
     children = base_children() ++ database_children() ++ runtime_children(env)
 
