@@ -99,16 +99,13 @@ defmodule RailwayApp.Railway.ConnectionManager do
       )
     end
 
-    # Start monitoring for all external services
+    # Start monitoring for all external services (WITHOUT saving to database during startup)
     {connections, poll_timers, health_timers, new_service_configs} =
       Enum.reduce(monitored_services, {%{}, %{}, %{}, %{}}, fn service,
                                                                {conn_acc, poll_acc, health_acc,
                                                                 config_acc} ->
         case start_service_connection(service.project_id, service.service_id, service) do
           {:ok, connection_info} ->
-            # Save to database for dashboard display
-            save_service_config(service.project_id, service.service_id, service)
-
             Logger.info(
               "Started monitoring external service: #{service.project_id}/#{service.environment_id}"
             )
@@ -145,6 +142,10 @@ defmodule RailwayApp.Railway.ConnectionManager do
 
     # Start health check timer
     schedule_health_check()
+
+    # Schedule database operations to happen after system is stable (5 seconds delay)
+    # This prevents database connection timeouts during startup
+    Process.send_after(self(), :persist_service_configs, 5_000)
 
     {:ok, new_state}
   end
@@ -289,6 +290,26 @@ defmodule RailwayApp.Railway.ConnectionManager do
   end
 
   @impl true
+  def handle_info(:persist_service_configs, state) do
+    Logger.info("Persisting service configurations to database after startup delay")
+
+    # Save all service configs to database now that system is stable
+    Enum.each(state.service_configs, fn {service_id, config} ->
+      try do
+        save_service_config(state.project_id, service_id, config)
+        Logger.debug("Persisted service config for #{service_id}")
+      rescue
+        error ->
+          Logger.error("Failed to persist service config for #{service_id}: #{inspect(error)}")
+          # Don't crash the system if database is still not ready - just log and continue
+      end
+    end)
+
+    Logger.info("Service configuration persistence completed")
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(msg, state) do
     Logger.debug("Unhandled message: #{inspect(msg)}")
     {:noreply, state}
@@ -301,54 +322,90 @@ defmodule RailwayApp.Railway.ConnectionManager do
   end
 
   defp save_service_config(_project_id, service_id, config) do
-    # Save to service_configurations table (for internal tracking)
-    changeset =
-      RailwayApp.Railway.ServiceConfiguration.changeset(
-        %RailwayApp.Railway.ServiceConfiguration{},
-        Map.merge(config, %{service_id: service_id})
+    save_with_retry(service_id, config, 3, 1000)
+  end
+
+  defp save_with_retry(service_id, config, max_attempts, base_delay) do
+    case do_save_service_config(service_id, config) do
+      {:ok, _} ->
+        :ok
+
+      {:error, reason} when max_attempts > 1 ->
+        # Exponential backoff: 1000ms, 2000ms, 3000ms
+        delay = base_delay * (4 - max_attempts)
+
+        Logger.warning(
+          "Failed to save service config for #{service_id}, retrying in #{delay}ms: #{inspect(reason)}"
+        )
+
+        Process.sleep(delay)
+        save_with_retry(service_id, config, max_attempts - 1, base_delay)
+
+      {:error, reason} ->
+        Logger.error(
+          "Failed to save service config for #{service_id} after all retries: #{inspect(reason)}"
+        )
+
+        {:error, reason}
+    end
+  end
+
+  defp do_save_service_config(service_id, config) do
+    try do
+      # Save to service_configurations table (for internal tracking)
+      changeset =
+        RailwayApp.Railway.ServiceConfiguration.changeset(
+          %RailwayApp.Railway.ServiceConfiguration{},
+          Map.merge(config, %{service_id: service_id})
+        )
+
+      RailwayApp.Repo.insert(changeset,
+        on_conflict:
+          {:replace,
+           [
+             :enabled,
+             :polling_interval_seconds,
+             :batch_size,
+             :batch_window_seconds,
+             :log_level_filter,
+             :auto_reconnect,
+             :max_retry_attempts,
+             :retention_hours,
+             :updated_at
+           ]},
+        conflict_target: [:service_id]
       )
 
-    RailwayApp.Repo.insert(changeset,
-      on_conflict:
-        {:replace,
-         [
-           :enabled,
-           :polling_interval_seconds,
-           :batch_size,
-           :batch_window_seconds,
-           :log_level_filter,
-           :auto_reconnect,
-           :max_retry_attempts,
-           :retention_hours,
-           :updated_at
-         ]},
-      conflict_target: [:service_id]
-    )
+      # Also save to service_configs table (for dashboard display)
+      # Use first 8 chars of service_id for more readable default name
+      default_name = "Service #{String.slice(service_id, 0, 8)}"
+      service_name = Map.get(config, :service_name, default_name)
 
-    # Also save to service_configs table (for dashboard display)
-    # Use first 8 chars of service_id for more readable default name
-    default_name = "Service #{String.slice(service_id, 0, 8)}"
-    service_name = Map.get(config, :service_name, default_name)
+      case RailwayApp.ServiceConfigs.get_by_service_id(service_id) do
+        nil ->
+          # Create new service config
+          RailwayApp.ServiceConfigs.create_service_config(%{
+            service_id: service_id,
+            service_name: service_name,
+            auto_remediation_enabled: Map.get(config, :auto_remediation_enabled, true),
+            confidence_threshold: Map.get(config, :confidence_threshold, 0.7)
+          })
 
-    case RailwayApp.ServiceConfigs.get_by_service_id(service_id) do
-      nil ->
-        # Create new service config
-        RailwayApp.ServiceConfigs.create_service_config(%{
-          service_id: service_id,
-          service_name: service_name,
-          auto_remediation_enabled: Map.get(config, :auto_remediation_enabled, true),
-          confidence_threshold: Map.get(config, :confidence_threshold, 0.7)
-        })
+        existing ->
+          # Update existing service config
+          RailwayApp.ServiceConfigs.update_service_config(existing, %{
+            service_name: service_name,
+            auto_remediation_enabled:
+              Map.get(config, :auto_remediation_enabled, existing.auto_remediation_enabled),
+            confidence_threshold:
+              Map.get(config, :confidence_threshold, existing.confidence_threshold)
+          })
+      end
 
-      existing ->
-        # Update existing service config
-        RailwayApp.ServiceConfigs.update_service_config(existing, %{
-          service_name: service_name,
-          auto_remediation_enabled:
-            Map.get(config, :auto_remediation_enabled, existing.auto_remediation_enabled),
-          confidence_threshold:
-            Map.get(config, :confidence_threshold, existing.confidence_threshold)
-        })
+      {:ok, :saved}
+    rescue
+      error ->
+        {:error, error}
     end
   end
 

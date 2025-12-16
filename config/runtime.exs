@@ -38,7 +38,10 @@ if config_env() == :prod do
   config :railway_app, RailwayApp.Repo,
     # ssl: true,
     url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20"),
+    # Allow requests to wait longer in queue instead of timing out immediately
+    queue_target: String.to_integer(System.get_env("DB_QUEUE_TARGET") || "5000"),
+    queue_interval: String.to_integer(System.get_env("DB_QUEUE_INTERVAL") || "1000"),
     # For machines with several cores, consider starting multiple pools of `pool_size`
     # pool_count: 4,
     socket_options: maybe_ipv6

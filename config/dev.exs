@@ -20,7 +20,7 @@ cond do
       url: database_url,
       stacktrace: true,
       show_sensitive_data_on_connection_error: true,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20")
 
   System.get_env("DATABASE_PUBLIC_URL") != nil ->
     # Use Railway's public database URL (when TCP proxy is enabled)
@@ -35,7 +35,7 @@ cond do
       url: database_url,
       stacktrace: true,
       show_sensitive_data_on_connection_error: true,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20")
 
   System.get_env("DATABASE_URL") != nil ->
     # Use provided DATABASE_URL (may be internal Railway domain - won't work locally)
@@ -55,7 +55,7 @@ cond do
       url: database_url,
       stacktrace: true,
       show_sensitive_data_on_connection_error: true,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "20")
 
   true ->
     # Use local PostgreSQL
