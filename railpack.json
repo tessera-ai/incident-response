@@ -1,3 +1,18 @@
 {
-  "$schema": "https://schema.railpack.com"
+  "$schema": "https://schema.railpack.com",
+  "steps": {
+    "build": {
+      "commands": [
+        "npm install",
+        "npm run build",
+        "mix deps.get --only prod",
+        "mix deps.compile",
+        "mix ecto.migrate",
+        "mix assets.setup",
+        "mix compile",
+        "mix assets.deploy",
+        "mix release"
+      ]
+    }
+  }
 }
