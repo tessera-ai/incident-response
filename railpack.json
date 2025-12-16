@@ -3,8 +3,6 @@
   "steps": {
     "build": {
       "commands": [
-        "npm install",
-        "npm run build",
         "mix deps.get --only prod",
         "mix deps.compile",
         "mix ecto.migrate",
