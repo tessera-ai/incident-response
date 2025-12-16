@@ -295,7 +295,7 @@ defmodule RailwayApp.Analysis.LogProcessor do
           RailwayApp.ServiceConfigs.create_service_config(%{
             service_id: service_id,
             service_name: "Service #{service_id}",
-            auto_remediation_enabled: true,
+            auto_remediation_enabled: false,
             confidence_threshold: 0.7
           })
 

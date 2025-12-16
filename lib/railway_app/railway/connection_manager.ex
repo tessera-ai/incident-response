@@ -387,7 +387,7 @@ defmodule RailwayApp.Railway.ConnectionManager do
           RailwayApp.ServiceConfigs.create_service_config(%{
             service_id: service_id,
             service_name: service_name,
-            auto_remediation_enabled: Map.get(config, :auto_remediation_enabled, true),
+            auto_remediation_enabled: Map.get(config, :auto_remediation_enabled, false),
             confidence_threshold: Map.get(config, :confidence_threshold, 0.7)
           })
 

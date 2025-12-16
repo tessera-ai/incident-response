@@ -11,7 +11,7 @@ defmodule RailwayApp.ServiceConfig do
   schema "service_configs" do
     field :service_id, :string
     field :service_name, :string
-    field :auto_remediation_enabled, :boolean, default: true
+    field :auto_remediation_enabled, :boolean, default: false
     field :memory_scale_default, :integer
     field :replica_scale_default, :integer
     field :llm_provider, :string, default: "auto"
