@@ -428,7 +428,9 @@ defmodule RailwayApp.Railway.Client do
           }
           customDomains {
             domain
-            status
+            status {
+              certificateStatus
+            }
           }
         }
       }

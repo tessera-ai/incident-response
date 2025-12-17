@@ -34,43 +34,67 @@ defmodule RailwayApp.Conversations.ConversationManager do
     session =
       case Conversations.get_session_by_channel_ref(session_key) do
         nil ->
-          {:ok, session} =
-            Conversations.create_session(%{
-              incident_id: incident_id,
-              channel: "slack",
-              channel_ref: session_key,
-              participant_id: user_id,
-              started_at: DateTime.utc_now()
-            })
+          case Conversations.create_session(%{
+                 incident_id: incident_id,
+                 channel: "slack",
+                 channel_ref: session_key,
+                 participant_id: user_id,
+                 started_at: DateTime.utc_now()
+               }) do
+            {:ok, session} ->
+              session
 
-          session
+            {:error, changeset} ->
+              Logger.warning("Failed to create session: #{inspect(changeset.errors)}")
+              nil
+          end
 
         existing ->
           existing
       end
 
-    # Send welcome message
-    incident = Incidents.get_incident(incident_id)
+    if session do
+      # Send welcome message
+      incident = Incidents.get_incident(incident_id)
 
-    SlackNotifier.send_message(
-      channel_id,
-      "👋 Hi! I'm here to help with this incident. You can:\n\n" <>
-        "*Information:*\n" <>
-        "• `status` - Get current service status\n" <>
-        "• `logs` - View recent logs\n" <>
-        "• `deployments` - List recent deployments\n" <>
-        "• `help` - Show all commands\n\n" <>
-        "Just type your question or command and I'll do my best to help!",
-      thread_ts
-    )
+      if incident do
+        SlackNotifier.send_message(
+          channel_id,
+          "👋 Hi! I'm here to help with this incident. You can:\n\n" <>
+            "*Information:*\n" <>
+            "• `status` - Get current service status\n" <>
+            "• `logs` - View recent logs\n" <>
+            "• `deployments` - List recent deployments\n" <>
+            "• `help` - Show all commands",
+          thread_ts
+        )
 
-    # Log system message
-    Conversations.create_message(%{
-      session_id: session.id,
-      role: "system",
-      content: "Chat session started for incident: #{incident.service_name}",
-      timestamp: DateTime.utc_now()
-    })
+        # Log system message
+        Conversations.create_message(%{
+          session_id: session.id,
+          role: "system",
+          content: "Chat session started for incident: #{incident.service_name}",
+          timestamp: DateTime.utc_now()
+        })
+      else
+        SlackNotifier.send_message(
+          channel_id,
+          "⚠️ I couldn't find the details for this incident (ID: #{incident_id}). It may have been deleted.",
+          thread_ts
+        )
+      end
+    else
+      Logger.error(
+        "Could not start chat session for #{incident_id} (referencing missing incident?)"
+      )
+
+      # Optional: notify user that session creation failed, but might be spammy if caused by system error
+      SlackNotifier.send_message(
+        channel_id,
+        "❌ Failed to start chat session. The incident might no longer exist.",
+        thread_ts
+      )
+    end
 
     {:noreply, state}
   end
